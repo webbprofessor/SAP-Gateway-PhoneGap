@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html manifest="" lang="en-US">
+<head>
+   <title>PhoneGap / SAP Gateway</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+   <meta name="apple-mobile-web-app-capable" content="yes" />
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+
+<script type="text/javascript" src="cordova-2.2.0.js"></script>
+<script type="text/javascript" src="base64.js"></script> 
+<script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+		
+<script> 
+ 
+   // Wait for Cordova to load
+    document.addEventListener("deviceready", onDeviceReady, false);
+
+	// Cordova is ready
+    function onDeviceReady(){
+
+	}
+
+//************************************************************************
+//*  Construct a Basic Authentication header for the HTML request to GW  *
+//************************************************************************  
+	function makeBasicAuth(uname, pword){
+	   var tok = uname + ':' + pword;
+	   var hash = Base64.encode(tok);
+	   return "Basic " + hash;
+	}
+	
+//************************************************************************
+//*  Start GetPeople: Make a call to read the list of People from GW     *
+//************************************************************************
+	
+	function getPeople(uname, pword){
+
+    $.mobile.showPageLoadingMsg();
+    
+		    // start by checking if there is any type of network connection by using the Network API of
+	        // PhoneGap. If not connection exits exit.
+	     	//  if(navigator.network.connection.type === Connection.UNKNOWN || navigator.network.connection.type === Connection.NONE){
+	         //      alert('I cannot detect a suitable network connection to call ES Workplace. ' +
+	         //           'Please make sure you have a network available before trying again');
+	        //       return;
+	       //   }
+
+        // encode username and password in basica authentication
+	        var auth = makeBasicAuth(uname, pword);
+			
+			var req = new XMLHttpRequest();	
+			req.open("GET", "http://pub10-76.env.cloudshare.com:8080/sap/opu/odata/sap/Z_WP_USER_SEARCH_SRV/USERS?$format=json", true);
+			req.setRequestHeader('Authorization', auth);
+			
+			req.onreadystatechange=function(){
+				if(req.readyState == 4 && (req.status==200)){
+					// get the type of response
+					var type = req.getResponseHeader("Content-Type");
+					if (type.indexOf("application/json") !== -1){
+									
+						var obj = JSON.parse(req.responseText);
+					//	$("#people").empty();
+						 
+						for (var i = 0; i < obj.d.results.length; i++ ){	
+						
+						$('#people')
+    					.append('<li><a href="" onclick="getPerson('+obj.d.results[i].Pernr+')">' + obj.d.results[i].firstname + ' ' + obj.d.results[i].lastname + '</a></li>');
+					
+					$("#people").listview('refresh');
+					
+						}	
+						
+					} else {
+					    console.log("Type is: " + type); 
+				    	document.getElementById('peopleElement').innerHTML = "<textarea id='txArea' cols='63' rows='60'>" + req.responseText + "</textarea>";
+				    }
+				} else if(req.readyState === 4 && (req.status=401)){
+				    alert("The authorization you provided does not work on ES Workplace");
+				}
+			}
+			
+			// send the request now
+			req.send();
+			
+			 $.mobile.hidePageLoadingMsg();	
+			 
+			  window.location = '#one';
+				
+		}  // end getPeople			
+//************************************************************************
+//*  End getPeople                                                       *
+//************************************************************************	
+
+</script>
+     </head>
+        <body>
+ 
+<!--********************************************************************-->
+<!--*  Create jQuery Mobile Index Page                                  -->
+<!--********************************************************************-->  
+  <!-- Start of index page: #index -->
+<div data-role="page" id="index" data-theme="a" data-add-back-btn="true">
+
+	<div data-role="header" data-theme="b">
+		<h1>SAP Login</h1>
+	</div><!-- /header -->
+
+		<div data-role="content" data-theme="a">	
+
+<p><label for="username" class="ui-hidden-accessible">User: </label>
+	<input type="text" name="sapUser" id="sapUser" placeholder="Username"></p>
+<p><label for="basic" class="ui-hidden-accessible">Password: </label>
+	<input type="password" name="sapPassword" id="sapPassword" placeholder="Password"></p>
+<input type="button" data-theme="b" value="Submit" onClick="getPeople(sapUser.value, sapPassword.value)" /><br/>
+		
+		</div><!-- /content -->
+			
+			<div data-role="footer">
+				<h3>Powered by SAP Gateway, PhoneGap and jQuery Mobile
+			</div><!-- /footer -->
+	
+	</div><!-- /page index -->  
+ 
+<!--********************************************************************-->
+<!--*  Create jQuery Mobile Page one                                    -->
+<!--********************************************************************-->  
+      <div data-role="page" data-theme="a" data-add-back-btn="false" id="one">
+            <div data-role="header" data-theme="b">
+                <h1>Employee App </h1>
+            </div>
+            
+            <div data-role="content">
+  	        	<div class="content-primary">
+    
+  			 <ul data-role="listview" data-filter="true" data-filter-theme="a" data-theme="a" data-dividertheme="a" id="people">
+  			 <!--	<li><a href="index.html">The Godfather</a></li> -->
+			 <!--	<li><a href="index.html">Inception</a></li> -->
+			 
+			 </ul>
+			<br/> 
+   <p><a href="#index" data-transition="slide" data-direction="reverse" data-role="button" data-theme="b">Back to Login</a></p>	
+    		           
+     </div>
+       </div>
+    	<div data-role="footer">
+		<h3>Powered by SAP Gateway, PhoneGap and jQuery Mobile</h3>
+		</div><!-- /footer --> 
+</div><!-- /page one -->
+    
+    </body>
+</html>
