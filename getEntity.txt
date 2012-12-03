@@ -1,0 +1,34 @@
+method USERS_GET_ENTITY.
+
+        DATA: lv_string  TYPE string,
+        ls_key_tab TYPE /IWBEP/S_MGW_NAME_VALUE_PAIR,
+        lv_and(4),
+        lv_value TYPE string,
+        wa_USER TYPE ZCL_Z_WP_USER_SEARCH_MPC=>TS_USER.
+
+  CONSTANTS: con_filler(1)  VALUE ''''.
+
+* Loop over the key values passed in
+  LOOP AT it_key_tab INTO ls_key_tab.
+
+* surround values with ''s
+    CONCATENATE con_filler ls_key_tab-value con_filler INTO lv_value.
+
+  ENDLOOP.
+
+SELECT pernr endda begda name2 stras ort01 pstlz land1 telnr state
+  bldng floor com01 num01 com02 num02 FROM PA0006
+  INTO CORRESPONDING FIELDS OF ER_ENTITY
+  WHERE PERNR EQ lv_value.
+
+ENDSELECT.
+
+  IF sy-subrc EQ 0.
+* fill the OData structure
+
+  ELSE.
+      " throw exception
+  ENDIF.
+
+
+endmethod.

@@ -1,0 +1,34 @@
+method USERS_GET_ENTITYSET.
+
+  DATA: lt_USER TYPE TABLE OF PA0006,
+        wa_USER TYPE ZCL_Z_WP_USER_SEARCH_MPC=>TS_USER,
+        ZFIRST TYPE TEXT50,
+        ZLAST TYPE TEXT50.
+
+  SELECT pernr endda begda name2 stras ort01 pstlz land1 telnr state
+    bldng floor com01 num01 com02 num02 FROM PA0006
+    INTO CORRESPONDING FIELDS OF wa_USER
+    WHERE PERNR BETWEEN 100394 AND 100400. 
+
+    CALL FUNCTION 'HR_RU_J3R_GET_PERNR_NAME'
+      EXPORTING
+        I_PERNR = wa_USER-PERNR
+        I_BEGDA = wa_USER-BEGDA
+        I_ENDDA = wa_USER-ENDDA
+        I_MOLGA = '33'
+      IMPORTING
+        E_NACHN = ZFIRST
+        E_VORNA = ZLAST.
+
+    wa_USER-Firstname = ZFIRST.
+    wa_USER-Lastname = ZLAST.
+
+
+    APPEND wa_USER to ET_ENTITYSET.
+
+
+
+  ENDSELECT.
+
+
+endmethod.
